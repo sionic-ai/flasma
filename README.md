@@ -41,7 +41,6 @@ table value 0 -> Cuda Out Of Memory
 ```
 
 
-
 ## Introduction
 
 This project is centered around using tensorflow-java to accelerate computation with GPUs in a jvm environment and utilizing it as a service api.
@@ -51,37 +50,37 @@ Cosine Similarity has many uses, as it is typically computed over the eigenvalue
 
 ### ANN method has the following problems.
 
-- It requires an initial build time for the vectors to be computed for similarity.
-- When extracting the top k similarities, the approximation performance decreases for values of k above a certain level.
-- Approximation performance decreases significantly as the dimensionality of the vector increases, i.e., if it is more than 100 to 256 dimensions when using an ANN, proper dimensionality reduction is required.**
+- **It requires an initial build time for the vectors to be computed for similarity.**
+- **When extracting the top k similarities, the approximation performance decreases for values of k above a certain level.**
+- **Approximation performance decreases significantly as the dimensionality of the vector increases, i.e., if it is more than 100 to 256 dimensions when using an ANN, proper dimensionality reduction is required.**
 - **When the number of digits in the vector is less than 100,000, ANNs do not have a significant computational performance gain due to their structure.**
 - **This means that if you are dealing with relatively high dimensional vectors and need a large top k, or if there are not enough target vectors, ANNs will be less useful.**
 
 ### In this project, we address the problem as follows.
 
-- **The target vectors are fixed in constant memory on the GPU by dynamically generating a model graph.
-- The inner operations, represented by metric operations, are dynamically batched with tensor operations in the Tensorflow Graph to process many at once.
-- Pre-processes and stores and loads L2norm and Transpose operations in advance to avoid unnecessary runtime operations.
-- **Implement Dynamic Batch through akka-http, akka-stream, and asynchronous processing of Akka Http to process hundreds to thousands of requests simultaneously.
+- **The target vectors are fixed in constant memory on the GPU by dynamically generating a model graph.**
+- **The inner operations, represented by metric operations, are dynamically batched with tensor operations in the Tensorflow Graph to process many at once.**
+- **Pre-processes and stores and loads L2norm and Transpose operations in advance to avoid unnecessary runtime operations.**
+- **Implement Dynamic Batch through akka-http, akka-stream, and asynchronous processing of Akka Http to process hundreds to thousands of requests simultaneously.**
 
 ### Achieve the following performance and advantages over traditional best practices and SOTA.
 
-- **Gain approximately 55 to 65% request per second (RPS) without sacrificing recall compared to SOTA (ScaNN, 0.9876) for http://ann-benchmarks.com.** **Gain approximately 55 to 65% RPS compared to SOTA (ScaNN, 0.9876) for http://ann-benchmarks.com.
+- **Gain approximately 55 to 65% request per second (RPS) without sacrificing recall compared to SOTA (ScaNN, 0.9876) for http://ann-benchmarks.com.** 
 - **Loads in less than 2 seconds versus SOTA (ScaNN, 182 seconds) on the glove-100-angular benchmark dataset and spins up servers in less than 5 seconds when deployed.**
 - **For a 100,000-level vector, we get between 4000 and 260 requests per second (RPS) for 100 to 2048 dimensions.**
-- Target vectors can be loaded as npy files via python's numpy format.
-- It uses the tensorflow runtime which is built for multiple environments, so it can be easily used on linux, windows, mac, etc.
+- **Target vectors can be loaded as npy files via python's numpy format.**
+- **It uses the tensorflow runtime which is built for multiple environments, so it can be easily used on linux, windows, mac, etc.**
 - **We recommend using examples in relatively small production environments to consider throughput, latency, and to simplify the deployment pipeline without reducing recall.**
 
 ### Caveats. 
-- **Comparison with ann-benchmarks is a lossless calculation with a Recall of 1 and measured with end2end of the REST API, not batch library calls.** **Comparison with ann-benchmarks is a lossless calculation with a Recall of 1.
-- Comparisons to ann-benchmarks are not a fair comparison. ann-benchmarks were measured on a CPU r5.4xlarge on AWS, which is a very different environment than the GPU in the current example.**
-- Numerical errors may be caused by implicit GEMM algorithm changes due to the behavior of cublas' MatmulAlgoGetHeuristic in dynamic batch situations.
-- **The maximum available Dynamic Batch size depends on the specifications of the GPU memory. In general, giving it as large a value as your memory allows will result in higher RPS performance.
+- **Comparison with ann-benchmarks is a lossless calculation with a Recall of 1 and measured with end2end of the REST API, not batch library calls.**
+- **Comparisons to ann-benchmarks are not a fair comparison. ann-benchmarks were measured on a CPU r5.4xlarge on AWS, which is a very different environment than the GPU in the current example.**
+- **Numerical errors may be caused by implicit GEMM algorithm changes due to the behavior of cublas' MatmulAlgoGetHeuristic in dynamic batch situations.**
+- **The maximum available Dynamic Batch size depends on the specifications of the GPU memory. In general, giving it as large a value as your memory allows will result in higher RPS performance.**
 
 
 ## Default Configuration
-- Minimal code**, **Minimal dependencies**.
+- **Minimal code**, **Minimal dependencies**.
 - Use **Tensorflow-java-gpu** as the Serving Runtime
 - Configure the REST API via **AKKA-HTTP**.
 - Implementing dynamic batching via **akka-stream**.
@@ -90,8 +89,8 @@ Cosine Similarity has many uses, as it is typically computed over the eigenvalue
 
 ## docker
 ```
-docker build . -f Dockerfile -t akka:0.1
-docker run --gpus all -p 8080:8080 akka:0.1
+docker build . -f Dockerfile -t flasma:0.1
+docker run --gpus all -p 8080:8080 flasma:0.1
 ```
 
 ## local build & run
@@ -137,6 +136,9 @@ c = np.transpose(c).astype(np.float32).flatten()
 print(c) #[0.07308075 0.00123816 0.17119586 ... 0.08993698 0.1488913  0.07554862
 print(c.shape) #(1000000,)
 print(c.dtype) #float32
+
+np.save(f"./{item}-{dim}",c)
+```
 
 np.save(f"./{item}-{dim}",c)
 ```
