@@ -139,6 +139,3 @@ print(c.dtype) #float32
 
 np.save(f"./{item}-{dim}",c)
 ```
-
-np.save(f"./{item}-{dim}",c)
-```
