@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <appender name="STDOUT" target="System.out" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{ISO8601} %logger{5} %level - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/common.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/backup/common-%d{yyyy-MM-dd}-%i.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%date{ISO8601} %logger{5} %level - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>8192</queueSize>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="STDOUT"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="ASYNC"/>
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>
