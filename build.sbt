@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http-caching" % AkkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion,
   "ch.qos.logback" % "logback-classic" % LogbackVersion,
-  "org.tensorflow" % "tensorflow-core-platform" % "0.4.1"
+  "org.tensorflow" % "tensorflow-core-platform-gpu" % "0.4.1"
 )
 
 assembly / mainClass := Some("serving.http.HttpServer")
