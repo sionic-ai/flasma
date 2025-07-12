@@ -27,7 +27,7 @@ class TensorFlowProvider(graph: Graph) extends AutoCloseable {
 
     // run. This takes most of the time
     val resultTensors: Map[(String, Int), Tensor] = (runner.run().asScala zip outputs)
-      .map(x => (x._2._1,  x._2._2) -> x._1).toMap
+      .map(x => (x._2._1,  x._2._2) -> x._1).map(x=>(x._1,x._2.getValue)).toMap
 
     //release
     inputTensors.foreach(_.tensor.close())

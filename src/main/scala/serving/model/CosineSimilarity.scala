@@ -7,12 +7,13 @@ import org.tensorflow.ndarray.Shape
 import org.tensorflow.ndarray.buffer.DataBuffers
 import org.tensorflow.op.Ops
 import org.tensorflow.op.core.{Constant, Placeholder}
+import org.tensorflow.op.nn.TopK
 import org.tensorflow.types.TFloat32
 import serving.config.ConfigManager
 import serving.tensor.TensorFlowProvider
 import serving.tensor.InputTensor
 
-
+import java.nio.{ByteBuffer, ByteOrder}
 import java.nio.file.Paths
 
 final case class Vec(vec: Seq[(String, Array[Float])])
@@ -37,21 +38,47 @@ object CosineSimilarity {
 
   def model(k: Int): Graph = {
 
-    val wArray: Array[Float] = dataVectorNumpyArray
+    //val wArray: Array[Float] = dataVectorNumpyArray
+    //val wArray: Array[Float] = Array.fill(dim * wLength)(0.0f)
 
-    assert(wArray.length == (dim * wLength), f"${wArray.length} != ${dim} * ${wLength} npy file does not match size and dimension and sample length. ")
+    val wArrayLength:Long = dim.toLong * wLength.toLong
+
+    //assert(wArray.length == (dim * wLength), f"${wArray.length} != ${dim} * ${wLength} npy file does not match size and dimension and sample length. ")
 
     val graph = new Graph()
     val tf = Ops.create(graph)
-    val wTensor: Constant[TFloat32] = {
-      val fp32Buf = DataBuffers.ofFloats(wLength * dim).write(wArray, 0, wLength * dim)
-      tf.constant(Shape.of(1, dim, wLength), fp32Buf)
+
+    val wTensor = TFloat32.tensorOf(Shape.of(1, dim, wLength))
+
+
+    val chunkSize:Long = 100000
+    var offset:Long = 0
+
+    while (offset < wArrayLength) {
+      val length = Math.min(chunkSize, wArrayLength - offset)
+      println(length)
+      // 100만 개씩 데이터를 복사하여 바이트버퍼로 변환
+
+      val byteBuffer = ByteBuffer.allocateDirect((length * 4).toInt).order(ByteOrder.nativeOrder())
+      val byteArray = new Array[Byte]((length * 4).toInt)
+      byteBuffer.put(byteArray)
+
+      // wTensor에 기록
+      wTensor.asRawTensor().data().write(byteArray)
+
+      offset += length
+
+      val totalCopied = (100000 * (offset / 100000)) + length
+      println(s"Total copied elements: $totalCopied, wArray length: ${wArrayLength}")
     }
+
+
+
     val vTensor = tf.withName("input").placeholder(classOf[TFloat32],
       Placeholder.shape(Shape.of(-1, dim, 1)))
-    val mul = tf.math.mul(vTensor, wTensor)
+    val mul = tf.math.mul(vTensor, tf.constant(wTensor))
     val cosineSimilarity = tf.reduceSum(mul, tf.array(1))
-    val nnTopK = tf.withName("output").nn.topK(cosineSimilarity, tf.constant(k))
+    val nnTopK = tf.withName("output").nn.topK(cosineSimilarity, tf.constant(k), Array.empty[TopK.Options])
 
     graph
   }
@@ -103,4 +130,8 @@ object CosineSimilarity {
     run(v, k = topK)
   }
 
+  def main(args: Array[String]): Unit = {
+    val a = run(Array(Array.fill(100)(0.0f)),k = 5)
+    a.foreach(x=>x.foreach(println))
+}
 }
