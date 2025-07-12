@@ -39,38 +39,39 @@ object CosineSimilarity {
   def model(k: Int): Graph = {
 
     //val wArray: Array[Float] = dataVectorNumpyArray
-    val wArray: Array[Float] = Array.fill(dim * wLength)(0.0f)
+    //val wArray: Array[Float] = Array.fill(dim * wLength)(0.0f)
 
-    assert(wArray.length == (dim * wLength), f"${wArray.length} != ${dim} * ${wLength} npy file does not match size and dimension and sample length. ")
+    val wArrayLength:Long = dim.toLong * wLength.toLong
+
+    //assert(wArray.length == (dim * wLength), f"${wArray.length} != ${dim} * ${wLength} npy file does not match size and dimension and sample length. ")
 
     val graph = new Graph()
     val tf = Ops.create(graph)
 
     val wTensor = TFloat32.tensorOf(Shape.of(1, dim, wLength))
 
-    val chunkSize = 100000
-    var offset = 0
 
-    while (offset < wArray.length) {
-      val length = Math.min(chunkSize, wArray.length - offset)
+    val chunkSize:Long = 100000
+    var offset:Long = 0
+
+    while (offset < wArrayLength) {
+      val length = Math.min(chunkSize, wArrayLength - offset)
       println(length)
       // 100만 개씩 데이터를 복사하여 바이트버퍼로 변환
-      val byteBuffer = ByteBuffer.allocateDirect(length * 4).order(ByteOrder.nativeOrder())
 
-      for (i <- 0 until length) {
-        byteBuffer.putFloat(wArray(offset + i))
-      }
-
-      byteBuffer.flip()
-
-      val byteArray = new Array[Byte](length * 4)
-      byteBuffer.get(byteArray)
+      val byteBuffer = ByteBuffer.allocateDirect((length * 4).toInt).order(ByteOrder.nativeOrder())
+      val byteArray = new Array[Byte]((length * 4).toInt)
+      byteBuffer.put(byteArray)
 
       // wTensor에 기록
       wTensor.asRawTensor().data().write(byteArray)
 
       offset += length
+
+      val totalCopied = (100000 * (offset / 100000)) + length
+      println(s"Total copied elements: $totalCopied, wArray length: ${wArrayLength}")
     }
+
 
 
     val vTensor = tf.withName("input").placeholder(classOf[TFloat32],
