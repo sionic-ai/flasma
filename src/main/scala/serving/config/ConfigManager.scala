@@ -7,8 +7,8 @@ object ConfigManager {
   val takeSpinCountDelay : Int =  System.getProperty("takeSpinCountDelay","5").toInt
 
   val topK: Int = System.getProperty("topK","10").toInt
-  val dim: Int = System.getProperty("dim","100").toInt
-  val sample: Int =  System.getProperty("sample","10000").toInt
+  val dim: Int = System.getProperty("dim","1000").toInt
+  val sample: Int =  System.getProperty("sample","10000000").toInt
   val batch: Int =  System.getProperty("batch","16").toInt
   val npyFile: String = System.getProperty("npyFile", "./model/10000-100.npy")
 
